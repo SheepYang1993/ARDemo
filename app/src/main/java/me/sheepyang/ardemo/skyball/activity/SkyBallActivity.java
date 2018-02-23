@@ -1,4 +1,4 @@
-package me.sheepyang.ardemo;
+package me.sheepyang.ardemo.skyball.activity;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
@@ -12,7 +12,6 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -25,7 +24,11 @@ import java.util.List;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, GLSurfaceView.Renderer, SensorEventListener {
+import me.sheepyang.ardemo.BaseActivity;
+import me.sheepyang.ardemo.R;
+import me.sheepyang.ardemo.skyball.util.SkySphere;
+
+public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callback, GLSurfaceView.Renderer, SensorEventListener {
     private GLSurfaceView mGLView;
     private SensorManager mSensorManager;
     private Sensor mRotation;
@@ -59,7 +62,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_sky_ball);
+        setTitle("天空球");
         initView();
         initData();
         initListener();
@@ -84,8 +88,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
 
 //        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp.jpg");
-        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp2.png");
-//        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp6.jpg");
+//        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp2.png");
+        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp6.jpg");
 //        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp7.jpg");
     }
 
@@ -131,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "button", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SkyBallActivity.this, "button", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -204,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 camera = null;
             }
             e.printStackTrace();
-            Toast.makeText(MainActivity.this, "启动摄像头失败,请开启摄像头权限", Toast.LENGTH_SHORT).show();
+            Toast.makeText(SkyBallActivity.this, "启动摄像头失败,请开启摄像头权限", Toast.LENGTH_SHORT).show();
         }
     }
 
