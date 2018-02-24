@@ -25,12 +25,15 @@ import me.sheepyang.ardemo.location.util.LocationHelper;
 
 public class AROverlayView extends View {
 
+    public static final int MODE_MULTI = 0x0001;
+    public static final int MODE_SINGLE = 0x0002;
     Context context;
     private float[] rotatedProjectionMatrix = new float[16];
     private BDLocation currentLocation;
     private List<ARPoint> mARPointList;
     private Paint mPaint;
     private int mRadius;
+    private int mMode = MODE_MULTI;
 
     public AROverlayView(Context context) {
         super(context);
@@ -80,6 +83,23 @@ public class AROverlayView extends View {
         if (currentLocation == null) {
             return;
         }
+        switch (mMode) {
+            case MODE_SINGLE:
+                drawSingle(canvas);
+                break;
+            case MODE_MULTI:
+                drawMulti(canvas);
+                break;
+            default:
+                drawMulti(canvas);
+                break;
+        }
+    }
+
+    private void drawMulti(Canvas canvas) {
+        if (mARPointList == null || mARPointList.isEmpty()) {
+            return;
+        }
         for (int i = 0; i < mARPointList.size(); i++) {
             double distance = LocationHelper.getDistance(currentLocation, mARPointList.get(i).getLocation());
             BigDecimal bdDD = new BigDecimal(distance);
@@ -109,5 +129,48 @@ public class AROverlayView extends View {
                 }
             }
         }
+    }
+
+    private void drawSingle(Canvas canvas) {
+        if (mARPointList == null || mARPointList.isEmpty()) {
+            return;
+        }
+        ARPoint point = mARPointList.get(0);
+        double distance = LocationHelper.getDistance(currentLocation, point.getLocation());
+        BigDecimal bdDD = new BigDecimal(distance);
+        BigDecimal dd = bdDD.setScale(3, BigDecimal.ROUND_HALF_UP);
+        if (mDistance == -1 || dd.intValue() < mDistance) {
+            float[] currentLocationInECEF = LocationHelper.switchWSG84toECEF(currentLocation);
+            float[] pointInECEF = LocationHelper.switchWSG84toECEF(point.getLocation());
+            float[] pointInENU = LocationHelper.switchECEFtoENU(currentLocation, currentLocationInECEF, pointInECEF);
+
+            float[] cameraCoordinateVector = new float[4];
+            Matrix.multiplyMV(cameraCoordinateVector, 0, rotatedProjectionMatrix, 0, pointInENU, 0);
+
+            // cameraCoordinateVector[2] is z, that always less than 0 to display on right position
+            // if z > 0, the point will display on the opposite
+            if (cameraCoordinateVector[2] < 0) {
+                float x = (0.5f + cameraCoordinateVector[0] / cameraCoordinateVector[3]) * canvas.getWidth();
+                float y = (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * canvas.getHeight();
+                canvas.drawCircle(x + mRadius, y - mRadius, mRadius, mPaint);
+                String addrStr = point.getLocation().getAddrStr();
+                if (TextUtils.isEmpty(addrStr)) {
+                    addrStr = "暂无";
+                }
+                canvas.drawText(addrStr, x - (30 * addrStr.length() / 2), y - 80, mPaint);
+//                canvas.drawText("lat:" + mARPointList.get(i).getLocation().getLatitude(), x - (30 * ("lat:" + mARPointList.get(i).getLocation().getLatitude()).length() / 2), y - 150, paint);
+//                canvas.drawText("lng:" + mARPointList.get(i).getLocation().getLongitude(), x - (30 * ("lng:" + mARPointList.get(i).getLocation().getLongitude()).length() / 2), y - 220, paint);
+                canvas.drawText("距离:" + dd.toString() + "米", x - (30 * ("距离:" + dd.toString() + "米").length() / 2), y - 150, mPaint);
+                float left = 0;
+                float top = 0;
+                float right = 0;
+                float bottom = 0;
+                canvas.drawRect(left, top, right, bottom, mPaint);
+            }
+        }
+    }
+
+    public void setARMode(int mode) {
+        mMode = mode;
     }
 }

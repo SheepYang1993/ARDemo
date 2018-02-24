@@ -13,7 +13,9 @@ import android.location.LocationManager;
 import android.opengl.Matrix;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +25,9 @@ import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
 
-import java.util.ArrayList;
+import org.simple.eventbus.Subscriber;
+
+import java.util.Arrays;
 import java.util.List;
 
 import me.sheepyang.ardemo.BaseActivity;
@@ -37,7 +41,7 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
     final static String TAG = "CurrentWiFiActivity";
     private SurfaceView surfaceView;
     private FrameLayout cameraContainerLayout;
-    private AROverlayView arOverlayView;
+    private AROverlayView mArOverlayView;
     private Camera camera;
     private ARCamera arCamera;
     private TextView tvCurrentLocation;
@@ -54,7 +58,46 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
     boolean isGPSEnabled;
     boolean isNetworkEnabled;
     boolean locationServiceAvailable;
-    private List<ARPoint> mARPointList = new ArrayList<ARPoint>();
+    private List<ARPoint> mARPointList = Arrays.asList(
+            new ARPoint("乐都汇", 24.518142, 118.166792, 0),
+            new ARPoint("南二门", 24.492097, 118.18387, 0),
+            new ARPoint("南门", 24.488867, 118.185218, 0),
+            new ARPoint("东二门", 24.489014, 118.193703, 0),
+            new ARPoint("东门", 24.491354, 118.193738, 0),
+            new ARPoint("西门", 24.495615, 118.182676, 0),
+            new ARPoint("梦幻世界", 24.504572, 118.204622, 0),
+            new ARPoint("音乐学校", 24.496002, 118.199805, 0),
+            new ARPoint("五缘湾大桥", 24.545984, 118.18186, 0),
+            new ARPoint("五通小区", 24.513868, 118.198736, 0),
+            new ARPoint("会展酒店", 24.472435, 118.191478, 0),
+            new ARPoint("何厝", 24.492068, 118.199239, 0),
+            new ARPoint("古楼", 24.472501, 118.176207, 0),
+            new ARPoint("美图", 24.496057, 118.187068, 0)
+    );
+    private boolean mIsLocationMode = true;
+    private ARPoint[] mARPoints = new ARPoint[]{
+            new ARPoint("众联世纪", 24.494226, 118.19133, 0),
+            new ARPoint("蔡塘学校", 24.49011, 118.164706, 0),
+            new ARPoint("软件园工商银行", 24.49108, 118.187433, 0),
+            new ARPoint("宝龙广场(建设中...)", 24.492115, 118.17854, 0),
+    };
+    private int[] mDistances = new int[]{
+            100,
+            500,
+            1000,
+            1500,
+            2000,
+            3500,
+            5000,
+            10000,
+            15000,
+            25000,
+            50000,
+            100000
+    };
+    private int mCurrentLocationIndex = 0;
+    private int mDistanceIndex = 0;
+    private boolean mIsUseDistance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,19 +108,72 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
         cameraContainerLayout = (FrameLayout) findViewById(R.id.camera_container_layout);
         surfaceView = (SurfaceView) findViewById(R.id.surface_view);
         tvCurrentLocation = (TextView) findViewById(R.id.tv_current_location);
-        arOverlayView = new AROverlayView(this);
-        initARPoint();
-    }
-
-    private void initARPoint() {
-        mARPointList.add(new ARPoint("测试WiFi", 24.496057, 118.187068, 0));
-        arOverlayView.setARPointList(mARPointList);
+        mArOverlayView = new AROverlayView(this);
+        mArOverlayView.setARMode(AROverlayView.MODE_SINGLE);
+        mArOverlayView.setARPointList(mARPointList);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_current_wifi, menu);
         return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_switch_loaction_mode:
+                mIsLocationMode = !mIsLocationMode;
+                switchLocation();
+                return true;
+            case R.id.menu_switch_loaction:
+                switchLocation();
+                return true;
+            case R.id.menu_switch_wifi_list:
+                Toast.makeText(this, "暂未开发...", Toast.LENGTH_SHORT).show();
+                switchWiFiList();
+                return true;
+            case R.id.menu_cancel_range:
+                mArOverlayView.setDistance(-1);
+                mDistanceIndex = 0;
+                mIsUseDistance = false;
+                updateLatestLocation();
+                return true;
+            case R.id.menu_switch_range:
+                switchRange();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void switchWiFiList() {
+
+    }
+
+    private void switchRange() {
+        if (mDistanceIndex + 1 < mDistances.length) {
+            mDistanceIndex++;
+        } else {
+            mDistanceIndex = 0;
+        }
+        mArOverlayView.setDistance(mDistances[mDistanceIndex]);
+        mIsUseDistance = true;
+        updateLatestLocation();
+    }
+
+    private void switchLocation() {
+        if (mIsLocationMode) {
+            Toast.makeText(this, "请先切换定位置模式", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mCurrentLocationIndex + 1 < mARPoints.length) {
+            mCurrentLocationIndex++;
+        } else {
+            mCurrentLocationIndex = 0;
+        }
+        mLocation = mARPoints[mCurrentLocationIndex].getLocation();
+        updateLatestLocation();
     }
 
     @Override
@@ -114,10 +210,10 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
     }
 
     public void initAROverlayView() {
-        if (arOverlayView.getParent() != null) {
-            ((ViewGroup) arOverlayView.getParent()).removeView(arOverlayView);
+        if (mArOverlayView.getParent() != null) {
+            ((ViewGroup) mArOverlayView.getParent()).removeView(mArOverlayView);
         }
-        cameraContainerLayout.addView(arOverlayView);
+        cameraContainerLayout.addView(mArOverlayView);
     }
 
     public void initARCameraView() {
@@ -191,7 +287,7 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
             }
 
             Matrix.multiplyMM(rotatedProjectionMatrix, 0, projectionMatrix, 0, rotationMatrixFromVector, 0);
-            this.arOverlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix);
+            this.mArOverlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix);
         }
     }
 
@@ -247,13 +343,45 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
 //        }
     }
 
+    @Subscriber
+
+    public void onReceiveLocation(BDLocation bdLocation) {
+        if (mIsLocationMode) {
+            mLocation = bdLocation;
+            updateLatestLocation();
+        }
+    }
+
     private void updateLatestLocation() {
-        if (arOverlayView != null && mLocation != null) {
-            mLocation.setLatitude(24.494226);
-            mLocation.setLongitude(118.19133);
-            arOverlayView.updateCurrentLocation(mLocation);
-            tvCurrentLocation.setText("定位:众联世纪\n" + String.format("lat: %s \nlon: %s \naltitude: %s \n",
-                    mLocation.getLatitude(), mLocation.getLongitude(), mLocation.getAltitude()));
+        if (mArOverlayView != null && mLocation != null) {
+            mArOverlayView.updateCurrentLocation(mLocation);
+            StringBuilder sbHint = new StringBuilder();
+            sbHint.append("当前位置：");
+            sbHint.append(mLocation.getAddrStr());
+            if (!TextUtils.isEmpty(mLocation.getLocationDescribe())) {
+                sbHint.append(mLocation.getLocationDescribe());
+            }
+            sbHint.append("\n");
+            sbHint.append(
+                    String.format(
+                            "lat：%s\nlng：%s\naltitude：%s\n"
+                            , mLocation.getLatitude()
+                            , mLocation.getLongitude()
+                            , mLocation.getAltitude()));
+            if (mIsUseDistance) {
+                sbHint.append("距离范围：");
+                sbHint.append(mDistances[mDistanceIndex]);
+                sbHint.append("米以内\n");
+            } else {
+                sbHint.append("距离范围：无限制\n");
+            }
+            sbHint.append("定位模式：");
+            if (mIsLocationMode) {
+                sbHint.append("自动定位");
+            } else {
+                sbHint.append("固定位置");
+            }
+            tvCurrentLocation.setText(sbHint.toString());
         }
     }
 

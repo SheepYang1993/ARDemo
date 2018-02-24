@@ -27,7 +27,7 @@ import com.baidu.location.BDLocation;
 
 import org.simple.eventbus.Subscriber;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import me.sheepyang.ardemo.BaseActivity;
@@ -58,7 +58,22 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     boolean isGPSEnabled;
     boolean isNetworkEnabled;
     boolean locationServiceAvailable;
-    private List<ARPoint> mARPointList = new ArrayList<ARPoint>();
+    private List<ARPoint> mARPointList = Arrays.asList(
+            new ARPoint("乐都汇", 24.518142, 118.166792, 0),
+            new ARPoint("南二门", 24.492097, 118.18387, 0),
+            new ARPoint("南门", 24.488867, 118.185218, 0),
+            new ARPoint("东二门", 24.489014, 118.193703, 0),
+            new ARPoint("东门", 24.491354, 118.193738, 0),
+            new ARPoint("西门", 24.495615, 118.182676, 0),
+            new ARPoint("梦幻世界", 24.504572, 118.204622, 0),
+            new ARPoint("音乐学校", 24.496002, 118.199805, 0),
+            new ARPoint("五缘湾大桥", 24.545984, 118.18186, 0),
+            new ARPoint("五通小区", 24.513868, 118.198736, 0),
+            new ARPoint("会展酒店", 24.472435, 118.191478, 0),
+            new ARPoint("何厝", 24.492068, 118.199239, 0),
+            new ARPoint("古楼", 24.472501, 118.176207, 0),
+            new ARPoint("美图", 24.496057, 118.187068, 0)
+    );
     private boolean mIsLocationMode = true;
     private ARPoint[] mARPoints = new ARPoint[]{
             new ARPoint("众联世纪", 24.494226, 118.19133, 0),
@@ -94,24 +109,6 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
         surfaceView = (SurfaceView) findViewById(R.id.surface_view);
         tvCurrentLocation = (TextView) findViewById(R.id.tv_current_location);
         mArOverlayView = new AROverlayView(this);
-        initARPoint();
-    }
-
-    private void initARPoint() {
-        mARPointList.add(new ARPoint("南二门", 24.492097, 118.18387, 0));
-        mARPointList.add(new ARPoint("南门", 24.488867, 118.185218, 0));
-        mARPointList.add(new ARPoint("东二门", 24.489014, 118.193703, 0));
-        mARPointList.add(new ARPoint("东门", 24.491354, 118.193738, 0));
-        mARPointList.add(new ARPoint("西门", 24.495615, 118.182676, 0));
-        mARPointList.add(new ARPoint("梦幻世界", 24.504572, 118.204622, 0));
-        mARPointList.add(new ARPoint("音乐学校", 24.496002, 118.199805, 0));
-        mARPointList.add(new ARPoint("五缘湾大桥", 24.545984, 118.18186, 0));
-        mARPointList.add(new ARPoint("五通小区", 24.513868, 118.198736, 0));
-        mARPointList.add(new ARPoint("会展酒店", 24.472435, 118.191478, 0));
-        mARPointList.add(new ARPoint("何厝", 24.492068, 118.199239, 0));
-        mARPointList.add(new ARPoint("古楼", 24.472501, 118.176207, 0));
-        mARPointList.add(new ARPoint("乐都汇", 24.518142, 118.166792, 0));
-        mARPointList.add(new ARPoint("美图", 24.496057, 118.187068, 0));
         mArOverlayView.setARPointList(mARPointList);
     }
 
@@ -139,6 +136,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
                 mArOverlayView.setDistance(-1);
                 mDistanceIndex = 0;
                 mIsUseDistance = false;
+                updateLatestLocation();
                 return true;
             case R.id.menu_switch_range:
                 switchRange();
@@ -149,7 +147,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     }
 
     private void switchWiFiList() {
-        initARPoint();
+
     }
 
     private void switchRange() {
