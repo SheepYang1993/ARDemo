@@ -60,5 +60,6 @@
         android:id="@+id/menu_switch_wifi_list"
         android:orderInCategory="9"
         android:title="切换附近热点"
+        android:visible="false"
         app:showAsAction="collapseActionView"/>
 </menu>

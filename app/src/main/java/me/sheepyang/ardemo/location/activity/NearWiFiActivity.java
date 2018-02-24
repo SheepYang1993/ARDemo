@@ -132,7 +132,8 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
                 switchLocation();
                 return true;
             case R.id.menu_switch_wifi_list:
-                Toast.makeText(this, "待开发...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "暂未开发...", Toast.LENGTH_SHORT).show();
+                switchWiFiList();
                 return true;
             case R.id.menu_cancel_range:
                 mArOverlayView.setDistance(-1);
@@ -145,6 +146,10 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void switchWiFiList() {
+        initARPoint();
     }
 
     private void switchRange() {
