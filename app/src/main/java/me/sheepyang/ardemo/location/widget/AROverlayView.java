@@ -4,9 +4,11 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.opengl.Matrix;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 
 import com.baidu.location.BDLocation;
@@ -32,8 +34,10 @@ public class AROverlayView extends View {
     private BDLocation currentLocation;
     private List<ARPoint> mARPointList;
     private Paint mPaint;
+    private Paint mRectPaint;
     private int mRadius;
     private int mMode = MODE_MULTI;
+    private Rect mRect = new Rect();
 
     public AROverlayView(Context context) {
         super(context);
@@ -51,6 +55,12 @@ public class AROverlayView extends View {
         mPaint.setColor(Color.WHITE);
         mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
         mPaint.setTextSize(60);
+
+        mRectPaint = new Paint();
+        mRectPaint.setStyle(Paint.Style.STROKE);
+        mRectPaint.setColor(Color.RED);
+        mRectPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL));
+        mRectPaint.setTextSize(60);
     }
 
     public void setARPointList(List<ARPoint> pointList) {
@@ -85,7 +95,11 @@ public class AROverlayView extends View {
         }
         switch (mMode) {
             case MODE_SINGLE:
-                drawSingle(canvas);
+                if (mARPointList == null || mARPointList.isEmpty()) {
+                    return;
+                }
+                ARPoint point = mARPointList.get(0);
+                drawSingle(canvas, point);
                 break;
             case MODE_MULTI:
                 drawMulti(canvas);
@@ -100,42 +114,16 @@ public class AROverlayView extends View {
         if (mARPointList == null || mARPointList.isEmpty()) {
             return;
         }
-        for (int i = 0; i < mARPointList.size(); i++) {
-            double distance = LocationHelper.getDistance(currentLocation, mARPointList.get(i).getLocation());
-            BigDecimal bdDD = new BigDecimal(distance);
-            BigDecimal dd = bdDD.setScale(3, BigDecimal.ROUND_HALF_UP);
-            if (mDistance == -1 || dd.intValue() < mDistance) {
-                float[] currentLocationInECEF = LocationHelper.switchWSG84toECEF(currentLocation);
-                float[] pointInECEF = LocationHelper.switchWSG84toECEF(mARPointList.get(i).getLocation());
-                float[] pointInENU = LocationHelper.switchECEFtoENU(currentLocation, currentLocationInECEF, pointInECEF);
-
-                float[] cameraCoordinateVector = new float[4];
-                Matrix.multiplyMV(cameraCoordinateVector, 0, rotatedProjectionMatrix, 0, pointInENU, 0);
-
-                // cameraCoordinateVector[2] is z, that always less than 0 to display on right position
-                // if z > 0, the point will display on the opposite
-                if (cameraCoordinateVector[2] < 0) {
-                    float x = (0.5f + cameraCoordinateVector[0] / cameraCoordinateVector[3]) * canvas.getWidth();
-                    float y = (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * canvas.getHeight();
-                    canvas.drawCircle(x + mRadius, y - mRadius, mRadius, mPaint);
-                    String addrStr = mARPointList.get(i).getLocation().getAddrStr();
-                    if (TextUtils.isEmpty(addrStr)) {
-                        addrStr = "暂无";
-                    }
-                    canvas.drawText(addrStr, x - (30 * addrStr.length() / 2), y - 80, mPaint);
-//                canvas.drawText("lat:" + mARPointList.get(i).getLocation().getLatitude(), x - (30 * ("lat:" + mARPointList.get(i).getLocation().getLatitude()).length() / 2), y - 150, paint);
-//                canvas.drawText("lng:" + mARPointList.get(i).getLocation().getLongitude(), x - (30 * ("lng:" + mARPointList.get(i).getLocation().getLongitude()).length() / 2), y - 220, paint);
-                    canvas.drawText("距离:" + dd.toString() + "米", x - (30 * ("距离:" + dd.toString() + "米").length() / 2), y - 150, mPaint);
-                }
-            }
+        for (ARPoint point :
+                mARPointList) {
+            drawSingle(canvas, point);
         }
     }
 
-    private void drawSingle(Canvas canvas) {
-        if (mARPointList == null || mARPointList.isEmpty()) {
+    private void drawSingle(Canvas canvas, ARPoint point) {
+        if (point == null) {
             return;
         }
-        ARPoint point = mARPointList.get(0);
         double distance = LocationHelper.getDistance(currentLocation, point.getLocation());
         BigDecimal bdDD = new BigDecimal(distance);
         BigDecimal dd = bdDD.setScale(3, BigDecimal.ROUND_HALF_UP);
@@ -153,19 +141,43 @@ public class AROverlayView extends View {
                 float x = (0.5f + cameraCoordinateVector[0] / cameraCoordinateVector[3]) * canvas.getWidth();
                 float y = (0.5f - cameraCoordinateVector[1] / cameraCoordinateVector[3]) * canvas.getHeight();
                 canvas.drawCircle(x + mRadius, y - mRadius, mRadius, mPaint);
+
+
                 String addrStr = point.getLocation().getAddrStr();
                 if (TextUtils.isEmpty(addrStr)) {
                     addrStr = "暂无";
                 }
-                canvas.drawText(addrStr, x - (30 * addrStr.length() / 2), y - 80, mPaint);
-//                canvas.drawText("lat:" + mARPointList.get(i).getLocation().getLatitude(), x - (30 * ("lat:" + mARPointList.get(i).getLocation().getLatitude()).length() / 2), y - 150, paint);
-//                canvas.drawText("lng:" + mARPointList.get(i).getLocation().getLongitude(), x - (30 * ("lng:" + mARPointList.get(i).getLocation().getLongitude()).length() / 2), y - 220, paint);
-                canvas.drawText("距离:" + dd.toString() + "米", x - (30 * ("距离:" + dd.toString() + "米").length() / 2), y - 150, mPaint);
-                float left = 0;
-                float top = 0;
-                float right = 0;
-                float bottom = 0;
-                canvas.drawRect(left, top, right, bottom, mPaint);
+                mPaint.getTextBounds(addrStr, 0, addrStr.length(), mRect);
+                int addrWidth = mRect.width();//文字宽
+                int addrHeight = mRect.height();//文字高
+                canvas.drawText(addrStr, x - addrWidth / 2 + mRadius, y - 2 * mRadius - 20, mPaint);
+
+
+                String rangeStr = "距离:" + dd.toString() + "米";
+                mPaint.getTextBounds(rangeStr, 0, rangeStr.length(), mRect);
+                int rangeWidth = mRect.width();//文字宽
+                int rangeHeight = mRect.height();//文字高
+                canvas.drawText(rangeStr, x - rangeWidth / 2 + mRadius, y - 2 * mRadius - 40 - rangeHeight, mPaint);
+                float right = x + rangeWidth / 2 + mRadius;
+                float top = y - 2 * mRadius - 40 - 2 * rangeHeight;
+                float left = x - rangeWidth / 2 + mRadius;
+                float bottom = y;
+                canvas.drawRect(left, top, right, bottom, mRectPaint);
+
+                if (left < 0) {
+                    Log.i("SheepYang", "左边框超出屏幕");
+                }
+                if (right > canvas.getWidth()) {
+                    Log.i("SheepYang", "右边框超出屏幕");
+                }
+                if (top < 0) {
+                    Log.i("SheepYang", "上边框超出屏幕");
+                }
+                if (bottom > canvas.getHeight()) {
+                    Log.i("SheepYang", "下边框超出屏幕");
+                }
+//                Log.i("SheepYang", "width:" + canvas.getWidth() + ", height:" + canvas.getHeight());
+//                Log.i("SheepYang", "toptt:" + top + ", bottom:" + bottom);
             }
         }
     }
