@@ -22,12 +22,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
-import com.wifi.key.R;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import me.sheepyang.ardemo.BaseActivity;
+import me.sheepyang.ardemo.R;
 import me.sheepyang.ardemo.location.model.ARPoint;
 import me.sheepyang.ardemo.location.widget.ARCamera;
 import me.sheepyang.ardemo.location.widget.AROverlayView;

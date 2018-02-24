@@ -21,14 +21,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.wifi.key.R;
-
 import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import me.sheepyang.ardemo.BaseActivity;
+import me.sheepyang.ardemo.R;
 import me.sheepyang.ardemo.skyball.util.SkySphere;
 
 public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callback, GLSurfaceView.Renderer, SensorEventListener {

@@ -24,7 +24,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
-import com.wifi.key.R;
 
 import org.simple.eventbus.Subscriber;
 
@@ -32,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.sheepyang.ardemo.BaseActivity;
+import me.sheepyang.ardemo.R;
 import me.sheepyang.ardemo.location.model.ARPoint;
 import me.sheepyang.ardemo.location.widget.ARCamera;
 import me.sheepyang.ardemo.location.widget.AROverlayView;
@@ -41,7 +41,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     final static String TAG = "NearWiFiActivity";
     private SurfaceView surfaceView;
     private FrameLayout cameraContainerLayout;
-    private AROverlayView arOverlayView;
+    private AROverlayView mArOverlayView;
     private Camera camera;
     private ARCamera arCamera;
     private TextView tvCurrentLocation;
@@ -81,6 +81,8 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
             100000
     };
     private int mCurrentLocationIndex = 0;
+    private int mDistanceIndex = 0;
+    private boolean mIsUseDistance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +93,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
         cameraContainerLayout = (FrameLayout) findViewById(R.id.camera_container_layout);
         surfaceView = (SurfaceView) findViewById(R.id.surface_view);
         tvCurrentLocation = (TextView) findViewById(R.id.tv_current_location);
-        arOverlayView = new AROverlayView(this);
+        mArOverlayView = new AROverlayView(this);
         initARPoint();
     }
 
@@ -110,7 +112,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
         mARPointList.add(new ARPoint("古楼", 24.472501, 118.176207, 0));
         mARPointList.add(new ARPoint("乐都汇", 24.518142, 118.166792, 0));
         mARPointList.add(new ARPoint("美图", 24.496057, 118.187068, 0));
-        arOverlayView.setARPointList(mARPointList);
+        mArOverlayView.setARPointList(mARPointList);
     }
 
     @Override
@@ -130,24 +132,44 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
                 switchLocation();
                 return true;
             case R.id.menu_switch_wifi_list:
+                Toast.makeText(this, "待开发...", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.menu_cancel_range:
+                mArOverlayView.setDistance(-1);
+                mDistanceIndex = 0;
+                mIsUseDistance = false;
+                return true;
+            case R.id.menu_switch_range:
+                switchRange();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private void switchRange() {
+        if (mDistanceIndex + 1 < mDistances.length) {
+            mDistanceIndex++;
+        } else {
+            mDistanceIndex = 0;
+        }
+        mArOverlayView.setDistance(mDistances[mDistanceIndex]);
+        mIsUseDistance = true;
+        updateLatestLocation();
+    }
+
     private void switchLocation() {
         if (mIsLocationMode) {
-            Toast.makeText(this, "请先切换到固定位置模式", Toast.LENGTH_SHORT).show();
-        } else {
-            if (mCurrentLocationIndex + 1 < mARPoints.length) {
-                mCurrentLocationIndex++;
-            } else {
-                mCurrentLocationIndex = 0;
-            }
-            mLocation = mARPoints[mCurrentLocationIndex].getLocation();
-            updateLatestLocation();
+            Toast.makeText(this, "请先切换定位置模式", Toast.LENGTH_SHORT).show();
+            return;
         }
+        if (mCurrentLocationIndex + 1 < mARPoints.length) {
+            mCurrentLocationIndex++;
+        } else {
+            mCurrentLocationIndex = 0;
+        }
+        mLocation = mARPoints[mCurrentLocationIndex].getLocation();
+        updateLatestLocation();
     }
 
     @Override
@@ -184,10 +206,10 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     }
 
     public void initAROverlayView() {
-        if (arOverlayView.getParent() != null) {
-            ((ViewGroup) arOverlayView.getParent()).removeView(arOverlayView);
+        if (mArOverlayView.getParent() != null) {
+            ((ViewGroup) mArOverlayView.getParent()).removeView(mArOverlayView);
         }
-        cameraContainerLayout.addView(arOverlayView);
+        cameraContainerLayout.addView(mArOverlayView);
     }
 
     public void initARCameraView() {
@@ -261,7 +283,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
             }
 
             Matrix.multiplyMM(rotatedProjectionMatrix, 0, projectionMatrix, 0, rotationMatrixFromVector, 0);
-            this.arOverlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix);
+            this.mArOverlayView.updateRotatedProjectionMatrix(rotatedProjectionMatrix);
         }
     }
 
@@ -327,8 +349,8 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     }
 
     private void updateLatestLocation() {
-        if (arOverlayView != null && mLocation != null) {
-            arOverlayView.updateCurrentLocation(mLocation);
+        if (mArOverlayView != null && mLocation != null) {
+            mArOverlayView.updateCurrentLocation(mLocation);
             StringBuilder sbHint = new StringBuilder();
             sbHint.append("当前位置：");
             sbHint.append(mLocation.getAddrStr());
@@ -342,8 +364,13 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
                             , mLocation.getLatitude()
                             , mLocation.getLongitude()
                             , mLocation.getAltitude()));
-            sbHint.append("距离范围：");
-            sbHint.append("100米以内\n");
+            if (mIsUseDistance) {
+                sbHint.append("距离范围：");
+                sbHint.append(mDistances[mDistanceIndex]);
+                sbHint.append("米以内\n");
+            } else {
+                sbHint.append("距离范围：无限制\n");
+            }
             sbHint.append("定位模式：");
             if (mIsLocationMode) {
                 sbHint.append("自动定位");
