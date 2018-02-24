@@ -1,7 +1,6 @@
 package me.sheepyang.ardemo.location.activity;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -14,8 +13,9 @@ import android.location.LocationManager;
 import android.opengl.Matrix;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
+import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +23,15 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
+import com.wifi.key.R;
+
+import org.simple.eventbus.Subscriber;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import me.sheepyang.ardemo.BaseActivity;
-import me.sheepyang.ardemo.R;
 import me.sheepyang.ardemo.location.model.ARPoint;
 import me.sheepyang.ardemo.location.widget.ARCamera;
 import me.sheepyang.ardemo.location.widget.AROverlayView;
@@ -50,11 +54,33 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     private static final long MIN_TIME_BW_UPDATES = 0;//1000 * 60 * 1; // 1 minute
 
     private LocationManager locationManager;
-    public Location mLocation;
+    public BDLocation mLocation;
     boolean isGPSEnabled;
     boolean isNetworkEnabled;
     boolean locationServiceAvailable;
     private List<ARPoint> mARPointList = new ArrayList<ARPoint>();
+    private boolean mIsLocationMode = true;
+    private ARPoint[] mARPoints = new ARPoint[]{
+            new ARPoint("众联世纪", 24.494226, 118.19133, 0),
+            new ARPoint("蔡塘学校", 24.49011, 118.164706, 0),
+            new ARPoint("软件园工商银行", 24.49108, 118.187433, 0),
+            new ARPoint("宝龙广场(建设中...)", 24.492115, 118.17854, 0),
+    };
+    private int[] mDistances = new int[]{
+            100,
+            500,
+            1000,
+            1500,
+            2000,
+            3500,
+            5000,
+            10000,
+            15000,
+            25000,
+            50000,
+            100000
+    };
+    private int mCurrentLocationIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +114,43 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_near_wifi, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_switch_loaction_mode:
+                mIsLocationMode = !mIsLocationMode;
+                switchLocation();
+                return true;
+            case R.id.menu_switch_loaction:
+                switchLocation();
+                return true;
+            case R.id.menu_switch_wifi_list:
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void switchLocation() {
+        if (mIsLocationMode) {
+            Toast.makeText(this, "请先切换到固定位置模式", Toast.LENGTH_SHORT).show();
+        } else {
+            if (mCurrentLocationIndex + 1 < mARPoints.length) {
+                mCurrentLocationIndex++;
+            } else {
+                mCurrentLocationIndex = 0;
+            }
+            mLocation = mARPoints[mCurrentLocationIndex].getLocation();
+            updateLatestLocation();
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         requestLocationPermission();
@@ -116,7 +179,7 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
                 this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSIONS_CODE);
         } else {
-            initLocationService();
+//            initLocationService();
         }
     }
 
@@ -208,59 +271,86 @@ public class NearWiFiActivity extends BaseActivity implements SensorEventListene
     }
 
     private void initLocationService() {
+//
+//        if (Build.VERSION.SDK_INT >= 23 &&
+//                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+//        }
+//
+//        try {
+//            this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+//
+//            // Get GPS and network status
+//            this.isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+//            this.isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//
+//            if (!isNetworkEnabled && !isGPSEnabled) {
+//                // cannot get location
+//                this.locationServiceAvailable = false;
+//            }
+//
+//            this.locationServiceAvailable = true;
+//
+//            if (isNetworkEnabled) {
+//                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+//                        MIN_TIME_BW_UPDATES,
+//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+//                if (locationManager != null) {
+//                    mLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+//                    updateLatestLocation();
+//                }
+//            }
+//
+//            if (isGPSEnabled) {
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+//                        MIN_TIME_BW_UPDATES,
+//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+//
+//                if (locationManager != null) {
+//                    mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//                    updateLatestLocation();
+//                }
+//            }
+//        } catch (Exception ex) {
+//            Log.e(TAG, ex.getMessage());
+//
+//        }
+    }
 
-        if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+    @Subscriber
 
-        try {
-            this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-            // Get GPS and network status
-            this.isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            this.isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-            if (!isNetworkEnabled && !isGPSEnabled) {
-                // cannot get location
-                this.locationServiceAvailable = false;
-            }
-
-            this.locationServiceAvailable = true;
-
-            if (isNetworkEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                if (locationManager != null) {
-                    mLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    updateLatestLocation();
-                }
-            }
-
-            if (isGPSEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-
-                if (locationManager != null) {
-                    mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    updateLatestLocation();
-                }
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, ex.getMessage());
-
+    public void onReceiveLocation(BDLocation bdLocation) {
+        if (mIsLocationMode) {
+            mLocation = bdLocation;
+            updateLatestLocation();
         }
     }
 
     private void updateLatestLocation() {
         if (arOverlayView != null && mLocation != null) {
-            mLocation.setLatitude(24.494226);
-            mLocation.setLongitude(118.19133);
             arOverlayView.updateCurrentLocation(mLocation);
-            tvCurrentLocation.setText("定位:众联世纪\n" + String.format("lat: %s \nlon: %s \naltitude: %s \n",
-                    mLocation.getLatitude(), mLocation.getLongitude(), mLocation.getAltitude()));
+            StringBuilder sbHint = new StringBuilder();
+            sbHint.append("当前位置：");
+            sbHint.append(mLocation.getAddrStr());
+            if (!TextUtils.isEmpty(mLocation.getLocationDescribe())) {
+                sbHint.append(mLocation.getLocationDescribe());
+            }
+            sbHint.append("\n");
+            sbHint.append(
+                    String.format(
+                            "lat：%s\nlng：%s\naltitude：%s\n"
+                            , mLocation.getLatitude()
+                            , mLocation.getLongitude()
+                            , mLocation.getAltitude()));
+            sbHint.append("距离范围：");
+            sbHint.append("100米以内\n");
+            sbHint.append("定位模式：");
+            if (mIsLocationMode) {
+                sbHint.append("自动定位");
+            } else {
+                sbHint.append("固定位置");
+            }
+            tvCurrentLocation.setText(sbHint.toString());
         }
     }
 

@@ -1,17 +1,19 @@
 package me.sheepyang.ardemo;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
 import android.view.MenuItem;
+
+import com.wifi.key.R;
+
+import org.simple.eventbus.EventBus;
 
 import me.sheepyang.ardemo.location.activity.CurrentWiFiActivity;
 import me.sheepyang.ardemo.location.activity.NearWiFiActivity;
 import me.sheepyang.ardemo.skyball.activity.SkyBallActivity;
 
 /**
- * TODO 描述
- *
  * @author SheepYang
  * @since 2018/2/23 9:44
  */
@@ -19,9 +21,17 @@ import me.sheepyang.ardemo.skyball.activity.SkyBallActivity;
 public class BaseActivity extends AppCompatActivity {
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // register the receiver object
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        // Don’t forget to unregister !!
+        EventBus.getDefault().unregister(this);
+        super.onDestroy();
     }
 
     @Override

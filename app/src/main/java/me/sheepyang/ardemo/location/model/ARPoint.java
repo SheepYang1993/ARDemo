@@ -1,28 +1,26 @@
 package me.sheepyang.ardemo.location.model;
 
-import android.location.Location;
+import com.baidu.location.Address;
+import com.baidu.location.BDLocation;
 
 /**
  * Created by ntdat on 1/16/17.
  */
 
 public class ARPoint {
-    Location location;
-    String name;
+    BDLocation location;
 
     public ARPoint(String name, double lat, double lon, double altitude) {
-        this.name = name;
-        location = new Location("ARPoint");
+        location = new BDLocation();
         location.setLatitude(lat);
         location.setLongitude(lon);
         location.setAltitude(altitude);
+        Address.Builder addr = new Address.Builder();
+        addr.district(name);
+        location.setAddr(addr.build());
     }
 
-    public Location getLocation() {
+    public BDLocation getLocation() {
         return location;
-    }
-
-    public String getName() {
-        return name;
     }
 }

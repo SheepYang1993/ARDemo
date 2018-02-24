@@ -13,11 +13,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.wifi.key.R;
 
 import java.util.List;
 
@@ -25,7 +29,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import me.sheepyang.ardemo.BaseActivity;
-import me.sheepyang.ardemo.R;
 import me.sheepyang.ardemo.skyball.util.SkySphere;
 
 public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callback, GLSurfaceView.Renderer, SensorEventListener {
@@ -33,7 +36,7 @@ public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callb
     private SensorManager mSensorManager;
     private Sensor mRotation;
     private SkySphere mSkySphere;
-
+    private String[] mSkyDrawableArrys = new String[]{"vr/360sp.jpg", "vr/360sp2.png", "vr/360sp6.jpg", "vr/360sp7.jpg"};
     private float[] matrix = new float[16];
     private SurfaceView surfaceView;//预览摄像头
     private SurfaceHolder surfaceHolder;
@@ -58,6 +61,7 @@ public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callb
             }
         }
     };
+    private int mSkyDrawableIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +72,46 @@ public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callb
         initData();
         initListener();
         initGLView();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_sky_ball, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_pre_scene:
+                mSensorManager.unregisterListener(this);
+                mGLView.onPause();
+                if (mSkyDrawableIndex - 1 >= 0) {
+                    mSkyDrawableIndex--;
+                } else {
+                    mSkyDrawableIndex = mSkyDrawableArrys.length - 1;
+                }
+                mSkySphere = new SkySphere(this.getApplicationContext(), mSkyDrawableArrys[mSkyDrawableIndex]);
+                mSkySphere.create();
+                mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_GAME);
+                mGLView.onResume();
+                return true;
+            case R.id.menu_next_scene:
+                mSensorManager.unregisterListener(this);
+                mGLView.onPause();
+                if (mSkyDrawableIndex + 1 < mSkyDrawableArrys.length) {
+                    mSkyDrawableIndex++;
+                } else {
+                    mSkyDrawableIndex = 0;
+                }
+                mSkySphere = new SkySphere(this.getApplicationContext(), mSkyDrawableArrys[mSkyDrawableIndex]);
+                mSkySphere.create();
+                mSensorManager.registerListener(this, mRotation, SensorManager.SENSOR_DELAY_GAME);
+                mGLView.onResume();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     private void initGLView() {
@@ -85,12 +129,7 @@ public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callb
         mGLView.setEGLContextClientVersion(2);
         mGLView.setRenderer(this);
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-
-
-//        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp.jpg");
-//        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp2.png");
-        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp6.jpg");
-//        mSkySphere = new SkySphere(this.getApplicationContext(), "vr/360sp7.jpg");
+        mSkySphere = new SkySphere(this.getApplicationContext(), mSkyDrawableArrys[mSkyDrawableIndex]);
     }
 
     private void initView() {
@@ -165,7 +204,9 @@ public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callb
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        mSkySphere.setSize(width, height);
+        if (mSkySphere != null) {
+            mSkySphere.setSize(width, height);
+        }
         GLES20.glViewport(0, 0, width, height);
     }
 
@@ -173,13 +214,17 @@ public class SkyBallActivity extends BaseActivity implements SurfaceHolder.Callb
     public void onDrawFrame(GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         GLES20.glClearColor(1, 1, 1, 1);
-        mSkySphere.draw();
+        if (mSkySphere != null) {
+            mSkySphere.draw();
+        }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         SensorManager.getRotationMatrixFromVector(matrix, event.values);
-        mSkySphere.setMatrix(matrix);
+        if (mSkySphere != null) {
+            mSkySphere.setMatrix(matrix);
+        }
     }
 
     @Override

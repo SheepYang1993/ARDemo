@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="com.youli.feiyu.fynotification.MainActivity">
+
+    <item
+        android:orderInCategory="0"
+        android:title="==切换界面=="
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_location_near"
+        android:orderInCategory="1"
+        android:title="附近WiFi"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_location_current"
+        android:orderInCategory="2"
+        android:title="当前WiFi"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_skyball"
+        android:orderInCategory="3"
+        android:title="天空球"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:orderInCategory="4"
+        android:title="==设置参数=="
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:orderInCategory="5"
+        android:title="切换距离范围"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_switch_loaction_mode"
+        android:orderInCategory="6"
+        android:title="切换定位模式"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_switch_loaction"
+        android:orderInCategory="7"
+        android:title="切换位置"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_switch_wifi_list"
+        android:orderInCategory="8"
+        android:title="切换附近热点"
+        app:showAsAction="collapseActionView"/>
+</menu>

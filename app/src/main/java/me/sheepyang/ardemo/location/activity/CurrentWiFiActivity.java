@@ -1,7 +1,6 @@
 package me.sheepyang.ardemo.location.activity;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -14,8 +13,7 @@ import android.location.LocationManager;
 import android.opengl.Matrix;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
+import android.view.Menu;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,11 +21,13 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
+import com.wifi.key.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import me.sheepyang.ardemo.BaseActivity;
-import me.sheepyang.ardemo.R;
 import me.sheepyang.ardemo.location.model.ARPoint;
 import me.sheepyang.ardemo.location.widget.ARCamera;
 import me.sheepyang.ardemo.location.widget.AROverlayView;
@@ -50,7 +50,7 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
     private static final long MIN_TIME_BW_UPDATES = 0;//1000 * 60 * 1; // 1 minute
 
     private LocationManager locationManager;
-    public Location mLocation;
+    public BDLocation mLocation;
     boolean isGPSEnabled;
     boolean isNetworkEnabled;
     boolean locationServiceAvailable;
@@ -72,6 +72,12 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
     private void initARPoint() {
         mARPointList.add(new ARPoint("测试WiFi", 24.496057, 118.187068, 0));
         arOverlayView.setARPointList(mARPointList);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_current_wifi, menu);
+        return true;
     }
 
     @Override
@@ -103,7 +109,7 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
                 this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSIONS_CODE);
         } else {
-            initLocationService();
+//            initLocationService();
         }
     }
 
@@ -195,50 +201,50 @@ public class CurrentWiFiActivity extends BaseActivity implements SensorEventList
     }
 
     private void initLocationService() {
-
-        if (Build.VERSION.SDK_INT >= 23 &&
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        try {
-            this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-            // Get GPS and network status
-            this.isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            this.isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-            if (!isNetworkEnabled && !isGPSEnabled) {
-                // cannot get location
-                this.locationServiceAvailable = false;
-            }
-
-            this.locationServiceAvailable = true;
-
-            if (isNetworkEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                if (locationManager != null) {
-                    mLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                    updateLatestLocation();
-                }
-            }
-
-            if (isGPSEnabled) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        MIN_TIME_BW_UPDATES,
-                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-
-                if (locationManager != null) {
-                    mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    updateLatestLocation();
-                }
-            }
-        } catch (Exception ex) {
-            Log.e(TAG, ex.getMessage());
-
-        }
+//
+//        if (Build.VERSION.SDK_INT >= 23 &&
+//                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            return;
+//        }
+//
+//        try {
+//            this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+//
+//            // Get GPS and network status
+//            this.isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+//            this.isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//
+//            if (!isNetworkEnabled && !isGPSEnabled) {
+//                // cannot get location
+//                this.locationServiceAvailable = false;
+//            }
+//
+//            this.locationServiceAvailable = true;
+//
+//            if (isNetworkEnabled) {
+//                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+//                        MIN_TIME_BW_UPDATES,
+//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+//                if (locationManager != null) {
+//                    mLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+//                    updateLatestLocation();
+//                }
+//            }
+//
+//            if (isGPSEnabled) {
+//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+//                        MIN_TIME_BW_UPDATES,
+//                        MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+//
+//                if (locationManager != null) {
+//                    mLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//                    updateLatestLocation();
+//                }
+//            }
+//        } catch (Exception ex) {
+//            Log.e(TAG, ex.getMessage());
+//
+//        }
     }
 
     private void updateLatestLocation() {

@@ -5,9 +5,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.location.Location;
 import android.opengl.Matrix;
+import android.text.TextUtils;
 import android.view.View;
+
+import com.baidu.location.BDLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ public class AROverlayView extends View {
 
     Context context;
     private float[] rotatedProjectionMatrix = new float[16];
-    private Location currentLocation;
+    private BDLocation currentLocation;
     private List<ARPoint> mARPointList;
 
 
@@ -46,7 +48,7 @@ public class AROverlayView extends View {
         this.invalidate();
     }
 
-    public void updateCurrentLocation(Location currentLocation) {
+    public void updateCurrentLocation(BDLocation currentLocation) {
         this.currentLocation = currentLocation;
         this.invalidate();
     }
@@ -67,9 +69,9 @@ public class AROverlayView extends View {
         paint.setTextSize(60);
 
         for (int i = 0; i < mARPointList.size(); i++) {
-            float[] currentLocationInECEF = LocationHelper.WSG84toECEF(currentLocation);
-            float[] pointInECEF = LocationHelper.WSG84toECEF(mARPointList.get(i).getLocation());
-            float[] pointInENU = LocationHelper.ECEFtoENU(currentLocation, currentLocationInECEF, pointInECEF);
+            float[] currentLocationInECEF = LocationHelper.switchWSG84toECEF(currentLocation);
+            float[] pointInECEF = LocationHelper.switchWSG84toECEF(mARPointList.get(i).getLocation());
+            float[] pointInENU = LocationHelper.switchECEFtoENU(currentLocation, currentLocationInECEF, pointInECEF);
 
             float[] cameraCoordinateVector = new float[4];
             Matrix.multiplyMV(cameraCoordinateVector, 0, rotatedProjectionMatrix, 0, pointInENU, 0);
@@ -83,7 +85,11 @@ public class AROverlayView extends View {
                 canvas.drawLine(0, canvas.getHeight() / 2f, canvas.getWidth(), canvas.getHeight() / 2f, paint);
                 canvas.drawLine(canvas.getWidth() / 2f, 0, canvas.getWidth() / 2f, canvas.getHeight(), paint);
                 canvas.drawCircle(x, y, radius, paint);
-                canvas.drawText(mARPointList.get(i).getName(), x - (30 * mARPointList.get(i).getName().length() / 2), y - 80, paint);
+                String addrStr = mARPointList.get(i).getLocation().getAddrStr();
+                if (TextUtils.isEmpty(addrStr)) {
+                    addrStr = "暂无";
+                }
+                canvas.drawText(addrStr, x - (30 * addrStr.length() / 2), y - 80, paint);
 //                canvas.drawText("lat:" + mARPointList.get(i).getLocation().getLatitude(), x - (30 * ("lat:" + mARPointList.get(i).getLocation().getLatitude()).length() / 2), y - 150, paint);
 //                canvas.drawText("lng:" + mARPointList.get(i).getLocation().getLongitude(), x - (30 * ("lng:" + mARPointList.get(i).getLocation().getLongitude()).length() / 2), y - 220, paint);
                 int distance = (int) LocationHelper.getDistance(currentLocation, mARPointList.get(i).getLocation());

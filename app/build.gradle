@@ -1,28 +1,55 @@
 apply plugin: 'com.android.application'
 
+Properties keystore = new Properties()
+def pFile = file("keystore.properties")
+BufferedReader reader = pFile.newReader("UTF-8")
+keystore.load(reader)
+
 android {
     compileSdkVersion 26
     defaultConfig {
         applicationId "me.sheepyang.ardemo"
         minSdkVersion 15
-        targetSdkVersion 26
+        targetSdkVersion 22
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        releaseSigning {
+            storeFile file(keystore.store)
+            storePassword keystore.store_password
+            keyAlias keystore.alias
+            keyPassword keystore.alias_password
+        }
+    }
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.releaseSigning
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.releaseSigning
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDir 'libs'
+            jni.srcDirs = []
         }
     }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    implementation files('libs/BaiduLBS_Android.jar')
+    implementation 'org.simple:androideventbus:1.0.5.1'
 }
