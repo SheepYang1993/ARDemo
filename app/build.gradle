@@ -52,4 +52,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation files('libs/BaiduLBS_Android.jar')
     implementation 'org.simple:androideventbus:1.0.5.1'
+    implementation files('libs/lite-orm-1.7.0.jar')
 }

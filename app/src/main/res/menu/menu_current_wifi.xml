@@ -22,43 +22,49 @@
         app:showAsAction="collapseActionView"/>
 
     <item
-        android:id="@+id/menu_skyball"
+        android:id="@+id/menu_location_move_path"
         android:orderInCategory="3"
+        android:title="距离绘制"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/menu_skyball"
+        android:orderInCategory="4"
         android:title="天空球"
         app:showAsAction="collapseActionView"/>
 
     <item
-        android:orderInCategory="4"
+        android:orderInCategory="5"
         android:title="==设置参数=="
         app:showAsAction="collapseActionView"/>
 
     <item
         android:id="@+id/menu_cancel_range"
-        android:orderInCategory="5"
+        android:orderInCategory="6"
         android:title="取消距离限制"
         app:showAsAction="collapseActionView"/>
 
     <item
         android:id="@+id/menu_switch_range"
-        android:orderInCategory="6"
+        android:orderInCategory="7"
         android:title="切换距离范围"
         app:showAsAction="collapseActionView"/>
 
     <item
         android:id="@+id/menu_switch_loaction_mode"
-        android:orderInCategory="7"
+        android:orderInCategory="8"
         android:title="切换定位模式"
         app:showAsAction="collapseActionView"/>
 
     <item
         android:id="@+id/menu_switch_loaction"
-        android:orderInCategory="8"
+        android:orderInCategory="9"
         android:title="切换定位位置"
         app:showAsAction="collapseActionView"/>
 
     <item
         android:id="@+id/menu_switch_wifi_list"
-        android:orderInCategory="9"
+        android:orderInCategory="10"
         android:title="切换附近热点"
         android:visible="false"
         app:showAsAction="collapseActionView"/>

@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import org.simple.eventbus.EventBus;
 
 import me.sheepyang.ardemo.location.activity.CurrentWiFiActivity;
+import me.sheepyang.ardemo.location.activity.MovePathActivity;
 import me.sheepyang.ardemo.location.activity.NearWiFiActivity;
 import me.sheepyang.ardemo.skyball.activity.SkyBallActivity;
 
@@ -46,6 +47,10 @@ public class BaseActivity extends AppCompatActivity {
                 return true;
             case R.id.menu_location_current:
                 startActivity(new Intent(this, CurrentWiFiActivity.class));
+                finish();
+                return true;
+            case R.id.menu_location_move_path:
+                startActivity(new Intent(this, MovePathActivity.class));
                 finish();
                 return true;
             default:
